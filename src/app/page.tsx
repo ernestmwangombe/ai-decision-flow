@@ -1,69 +1,54 @@
-import Image from "next/image";
+// Mark this file as a client component because React Flow needs the browser
+"use client";
 
+// Import the React Flow canvas plus its background grid and zoom controls
+import { ReactFlow, Background, Controls, type Node, type Edge } from "@xyflow/react";
+// Import React Flow's required default styles
+import "@xyflow/react/dist/style.css";
+// Import the Shadcn button to confirm Shadcn works
+import { Button } from "@/components/ui/button";
+
+// Define three starter nodes matching the assignment's example
+const initialNodes: Node[] = [
+  // The decision node, which asks the YES/NO question
+  { id: "1", position: { x: 50, y: 150 }, data: { label: "Is this a support request?" } },
+  // The node we visit when the answer is YES
+  { id: "2", position: { x: 350, y: 50 }, data: { label: "Support Node" } },
+  // The node we visit when the answer is NO
+  { id: "3", position: { x: 350, y: 250 }, data: { label: "Sales Node" } },
+];
+
+// Define two edges connecting the decision node to its outcomes
+const initialEdges: Edge[] = [
+  // The YES path, with a label so it's visible on the canvas
+  { id: "e1-2", source: "1", target: "2", label: "YES" },
+  // The NO path
+  { id: "e1-3", source: "1", target: "3", label: "NO" },
+];
+
+// The home page component
 export default function Home() {
+  // Render the page layout
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    // A full-screen column layout
+    <main className="flex h-screen flex-col">
+      {/* A simple header bar with the title and a Shadcn button */}
+      <header className="flex items-center justify-between border-b p-4">
+        {/* The app title */}
+        <h1 className="text-lg font-semibold">AI Decision Flow</h1>
+        {/* A Shadcn button proving the component library is installed */}
+        <Button variant="outline">Phase 1 ready</Button>
+      </header>
+      {/* The canvas container; React Flow needs an explicit height to render */}
+      <div className="flex-1">
+        {/* The React Flow canvas with our starter graph */}
+        <ReactFlow nodes={initialNodes} edges={initialEdges} fitView>
+          {/* A dotted background grid */}
+          <Background />
+          {/* Zoom and fit controls in the corner */}
+          <Controls />
+        </ReactFlow>
+      </div>
+    </main>
   );
 }
