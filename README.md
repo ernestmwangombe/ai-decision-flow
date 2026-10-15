@@ -30,6 +30,6 @@ See [EVIDENCE.md](EVIDENCE.md) for screenshots of each phase working.
 ## Phases
 
 - [x] Phase 1: Project Scaffolding & Environment
-- [ ] Phase 2: Visual Flow Editor & Graph Model
+- [x] Phase 2: Visual Flow Editor & Graph Model
 - [ ] Phase 3: Durable AI Execution Engine
 - [ ] Phase 4: Observability & Reliability Polish
