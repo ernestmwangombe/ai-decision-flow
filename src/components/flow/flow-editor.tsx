@@ -2,7 +2,7 @@
 "use client";
 
 // Import React hooks
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 // Import React Flow's canvas, helpers and types
 import {
   Background,
@@ -23,6 +23,8 @@ import { Button } from "@/components/ui/button";
 // Import our custom node and edge components
 import { DecisionNode } from "@/components/flow/decision-node";
 import { NoEdge, YesEdge } from "@/components/flow/branch-edges";
+// Import the run panel from Phase 3
+import { RunPanel } from "@/components/flow/run-panel";
 // Import the graph helpers, schemas and starter data
 import {
   NODE_TYPE,
@@ -32,6 +34,7 @@ import {
   fromStoredGraph,
   loadGraph,
   saveGraph,
+  toStoredGraph,
   wouldCreateCycle,
   type DecisionNodeType,
 } from "@/lib/graph-schema";
@@ -51,14 +54,17 @@ export function FlowEditor() {
   // Tracks whether we have finished loading from localStorage
   const [hydrated, setHydrated] = useState(false);
 
+  // The current graph in its minimal, validated shape, ready to send to the server
+  const graph = useMemo(() => toStoredGraph(nodes, edges), [nodes, edges]);
+
   // On first load in the browser, restore the saved graph or fall back to the starter graph
   useEffect(() => {
     // Try the saved graph first; use the starter graph if nothing valid is saved
-    const graph = fromStoredGraph(loadGraph() ?? STARTER_GRAPH);
+    const restored = fromStoredGraph(loadGraph() ?? STARTER_GRAPH);
     // Put the nodes on the canvas
-    setNodes(graph.nodes);
+    setNodes(restored.nodes);
     // Put the edges on the canvas
-    setEdges(graph.edges);
+    setEdges(restored.edges);
     // Mark loading as finished so saving can begin
     setHydrated(true);
   }, [setNodes, setEdges]);
@@ -126,11 +132,11 @@ export function FlowEditor() {
   // Replace everything on the canvas with the starter graph
   const resetGraph = useCallback(() => {
     // Rebuild the starter graph as live React Flow objects
-    const graph = fromStoredGraph(STARTER_GRAPH);
+    const restored = fromStoredGraph(STARTER_GRAPH);
     // Replace the nodes
-    setNodes(graph.nodes);
+    setNodes(restored.nodes);
     // Replace the edges
-    setEdges(graph.edges);
+    setEdges(restored.edges);
   }, [setNodes, setEdges]);
 
   // Render the canvas
@@ -173,10 +179,15 @@ export function FlowEditor() {
           <Button variant="outline" onClick={resetGraph}>
             Reset
           </Button>
-          {/* A tiny counter showing how big the graph is */}
+          {/* A tiny counter showing how big the graph is, with correct singular and plural */}
           <span className="rounded bg-white px-2 py-1 text-xs text-slate-600 shadow-sm">
-            {nodes.length} {nodes.length === 1 ? "node" : "nodes"} · {edges.length} {edges.length === 1 ? "edge" : "edges"}
+            {nodes.length} {nodes.length === 1 ? "node" : "nodes"} · {edges.length}{" "}
+            {edges.length === 1 ? "edge" : "edges"}
           </span>
+        </Panel>
+        {/* The run panel floating in the top-right corner */}
+        <Panel position="top-right">
+          <RunPanel graph={graph} />
         </Panel>
       </ReactFlow>
     </div>
