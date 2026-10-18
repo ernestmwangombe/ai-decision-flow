@@ -31,5 +31,18 @@ See [EVIDENCE.md](EVIDENCE.md) for screenshots of each phase working.
 
 - [x] Phase 1: Project Scaffolding & Environment
 - [x] Phase 2: Visual Flow Editor & Graph Model
-- [ ] Phase 3: Durable AI Execution Engine
+- [x] Phase 3: Durable AI Execution Engine
 - [ ] Phase 4: Observability & Reliability Polish
+
+## Running a Workflow
+
+1. Build your graph on the canvas. Drag from the green handle for YES and the red handle for NO. Start with one entry node, and write each prompt as a yes/no question.
+2. Type the text to evaluate into the **Run workflow** panel and click **Run workflow**.
+3. Each node runs as its own Inngest step. Gemini must answer exactly YES or NO. An invalid reply gets one stricter retry; a second invalid reply fails the run and marks that node as errored.
+4. Watch the trace in the panel, or open http://localhost:8288 to see each `decide-*` step.
+
+The decision prompt keeps the question in the system message and sends the run input alone, inside a delimiter with a random per-call token, so text in the input cannot pose as instructions.
+
+Testing the failure paths: set `LLM_FAULT_INJECTION=invalid-once` or `invalid-always` in `.env.local` (development only), restart `npm run dev`, and run again.
+
+Note: run history is kept in server memory and resets when the dev server restarts.
