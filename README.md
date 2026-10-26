@@ -32,7 +32,7 @@ See [EVIDENCE.md](EVIDENCE.md) for screenshots of each phase working.
 - [x] Phase 1: Project Scaffolding & Environment
 - [x] Phase 2: Visual Flow Editor & Graph Model
 - [x] Phase 3: Durable AI Execution Engine
-- [ ] Phase 4: Observability & Reliability Polish
+- [x] Phase 4: Observability & Reliability Polish
 
 ## Running a Workflow
 
@@ -46,3 +46,12 @@ The decision prompt keeps the question in the system message and sends the run i
 Testing the failure paths: set `LLM_FAULT_INJECTION=invalid-once` or `invalid-always` in `.env.local` (development only), restart `npm run dev`, and run again.
 
 Note: run history is kept in server memory and resets when the dev server restarts.
+
+## Phase 4 Features
+
+- **Visual execution state:** nodes show RUNNING, YES, NO or ERRORED while a run progresses, followed edges thicken and unused edges fade.
+- **Animated active edge:** white dashes travel along the edge the run is crossing.
+- **JSON export/import:** graphs are exported as a versioned file. Imports are validated with Zod (size, ids, positions, loops, prompt length), and every prompt is shown in a review dialog before it replaces the canvas. Prompts that read like instructions are flagged.
+- **Run history:** finished runs are saved in this browser (up to 25) and survive a dev-server restart.
+
+Evidence for every phase, with screenshots and short recordings, is in [EVIDENCE.md](EVIDENCE.md).

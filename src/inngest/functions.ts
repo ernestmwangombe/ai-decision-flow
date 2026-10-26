@@ -4,6 +4,7 @@ import { NonRetriableError } from "inngest";
 import { inngest } from "./client";
 // Import the YES/NO decision helper and its error type
 import { askYesNo, InvalidDecisionError } from "@/lib/decide";
+import { demoStepDelay } from "@/lib/demo-delay";
 // Import the logbook helpers
 import { completeRun, failRun, markRunning, recordStep, setActiveNode } from "@/lib/run-store";
 // Import the graph helpers and the event schema
@@ -97,6 +98,7 @@ export const runWorkflow = inngest.createFunction(
         const startedAt = Date.now();
         try {
           // Ask the model, with strict parsing and one stricter retry inside
+          await demoStepDelay();
           const decision = await askYesNo(node.data.prompt, input);
           // Write the successful result to the logbook
           recordStep(runId, {

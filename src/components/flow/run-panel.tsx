@@ -8,11 +8,18 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 // Import the branch colors and the graph type
 import { BRANCH_COLORS, type StoredGraph } from "@/lib/graph-schema";
+// Import the history helpers
+import { addToHistory, clearHistory, loadHistory } from "@/lib/run-history";
 // Import the run types
 import type { RunRecord, StepRecord } from "@/lib/run-types";
 
-// The panel needs the current graph so it can send it with the run request
-type RunPanelProps = { graph: StoredGraph };
+// The panel needs the current graph, and a way to tell the canvas which run to draw
+type RunPanelProps = {
+  // The graph to send with each run request
+  graph: StoredGraph;
+  // Called whenever the run being shown changes, so the canvas can light up nodes and edges
+  onRunChange: (run: RunRecord | null) => void;
+};
 
 // Friendly labels for each run status
 const STATUS_LABELS: Record<RunRecord["status"], string> = {
@@ -68,21 +75,35 @@ function StepRow({ step }: { step: StepRecord }) {
   );
 }
 
-// The panel that lets you run the workflow and watch its trace
-export function RunPanel({ graph }: RunPanelProps) {
+// The panel that lets you run the workflow, watch its trace, and browse past runs
+export function RunPanel({ graph, onRunChange }: RunPanelProps) {
   // The text the workflow should evaluate
   const [input, setInput] = useState("");
-  // The id of the run we are watching
+  // The id of the run we are watching live
   const [runId, setRunId] = useState<string | null>(null);
-  // The latest logbook entry for that run
+  // The run being shown (live or from history)
   const [run, setRun] = useState<RunRecord | null>(null);
   // Any problems to show the user
   const [errors, setErrors] = useState<string[]>([]);
   // True while the start request is in flight
   const [submitting, setSubmitting] = useState(false);
+  // Finished runs saved in this browser
+  const [history, setHistory] = useState<RunRecord[]>([]);
 
   // The panel is busy while submitting or while a watched run is unfinished
   const busy = submitting || (runId !== null && (run === null || run.status === "queued" || run.status === "running"));
+
+  // Load saved history once, in the browser
+  useEffect(() => {
+    // Read the saved runs
+    setHistory(loadHistory());
+  }, []);
+
+  // Tell the canvas which run to draw whenever it changes
+  useEffect(() => {
+    // Pass the run up to the editor
+    onRunChange(run);
+  }, [run, onRunChange]);
 
   // Poll the status endpoint once per second while we are watching a run
   useEffect(() => {
@@ -117,10 +138,17 @@ export function RunPanel({ graph }: RunPanelProps) {
         const data = await response.json();
         // Stop if cleanup happened while we were reading
         if (cancelled) return;
-        // Show the latest logbook entry
-        setRun(data.run as RunRecord);
-        // Stop polling once the run is finished
-        if (data.run.status === "completed" || data.run.status === "failed") clearInterval(timer);
+        // The latest logbook entry
+        const latest = data.run as RunRecord;
+        // Show it
+        setRun(latest);
+        // Once the run is finished, stop polling and save it to the history
+        if (latest.status === "completed" || latest.status === "failed") {
+          // Stop polling
+          clearInterval(timer);
+          // Save the run and refresh the list
+          setHistory(addToHistory(latest));
+        }
       } catch {
         // Network blips are ignored; the next tick retries
       }
@@ -180,9 +208,29 @@ export function RunPanel({ graph }: RunPanelProps) {
     }
   }
 
+  // Show a past run from the history
+  function viewHistoryRun(entry: RunRecord) {
+    // Clear any old messages
+    setErrors([]);
+    // Stop watching a live run, if there was one
+    setRunId(null);
+    // Show the saved trace and light up the canvas
+    setRun(entry);
+    // Put its input back in the box so it can be run again
+    setInput(entry.input);
+  }
+
+  // Delete all saved history
+  function clearAllHistory() {
+    // Remove it from storage
+    clearHistory();
+    // Empty the list on screen
+    setHistory([]);
+  }
+
   // Render the panel
   return (
-    // A white card that scrolls if the trace gets long; "nowheel" stops the canvas zooming while you scroll it
+    // A white card that scrolls if the content gets long; "nowheel" stops the canvas zooming while you scroll it
     <div className="nowheel max-h-[75vh] w-80 space-y-3 overflow-y-auto rounded-lg border border-slate-300 bg-white p-3 text-slate-900 shadow-md">
       {/* The panel title */}
       <h2 className="text-sm font-semibold">Run workflow</h2>
@@ -236,6 +284,49 @@ export function RunPanel({ graph }: RunPanelProps) {
           {run.status === "failed" ? <p className="text-xs font-semibold text-red-600">{run.error}</p> : null}
         </div>
       ) : null}
+
+      {/* The history section, collapsed by default */}
+      <details className="rounded border border-slate-200 text-xs">
+        {/* The clickable summary line with the number of saved runs */}
+        <summary className="cursor-pointer px-2 py-1 font-semibold text-slate-700">History ({history.length})</summary>
+        {/* The saved runs */}
+        <div className="space-y-1 p-2">
+          {history.length === 0 ? (
+            <p className="text-slate-500">Finished runs are saved here, in this browser only.</p>
+          ) : (
+            history.map((entry) => (
+              <button
+                key={entry.runId}
+                type="button"
+                onClick={() => viewHistoryRun(entry)}
+                className={`w-full rounded border p-2 text-left hover:bg-slate-100 ${
+                  run?.runId === entry.runId ? "border-blue-400 bg-blue-50" : "border-slate-200 bg-slate-50"
+                }`}
+              >
+                {/* When the run started, and how it ended */}
+                <div className="flex justify-between gap-2">
+                  <span>{new Date(entry.startedAt).toLocaleString()}</span>
+                  <span className={entry.status === "completed" ? "font-bold text-green-700" : "font-bold text-red-600"}>
+                    {entry.status === "completed" ? "Completed" : "Failed"}
+                  </span>
+                </div>
+                {/* The input text, cut off with an ellipsis if long */}
+                <p className="truncate text-slate-600">{entry.input}</p>
+                {/* The path of answers */}
+                <p className="text-slate-500">
+                  {entry.steps.map((step) => step.answer ?? "ERROR").join(" -> ") || "No steps"}
+                </p>
+              </button>
+            ))
+          )}
+          {/* A button to wipe the history */}
+          {history.length > 0 ? (
+            <button type="button" onClick={clearAllHistory} className="text-xs font-semibold text-red-600 hover:underline">
+              Clear history
+            </button>
+          ) : null}
+        </div>
+      </details>
     </div>
   );
 }

@@ -128,3 +128,21 @@
     @apply font-sans;
   }
 }
+/* Marching dashes for the edge a run is currently travelling along */
+@keyframes edge-flow {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+.edge-flow {
+  stroke-dasharray: 8 6;
+  animation: edge-flow 0.6s linear infinite;
+}
+
+/* Respect people who ask their system to reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .edge-flow {
+    animation: none;
+  }
+}
