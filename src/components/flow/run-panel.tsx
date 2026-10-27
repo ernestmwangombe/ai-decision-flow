@@ -153,11 +153,11 @@ export function RunPanel({ graph, onRunChange }: RunPanelProps) {
         // Network blips are ignored; the next tick retries
       }
       // Give up after about two minutes
-      if (polls >= 120) {
+      if (polls >= 600) {
         // Stop polling
         clearInterval(timer);
         // Tell the user
-        setErrors(["Stopped waiting after 2 minutes. Check the Inngest dashboard."]);
+        setErrors(["Stopped waiting after 10 minutes. Check the Inngest dashboard."]);
         // Release the busy state
         setRunId(null);
       }

@@ -6,7 +6,7 @@ const envSchema = z.object({
   // The API key must be a non-empty string
   GEMINI_API_KEY: z.string().min(1, "GEMINI_API_KEY is missing in .env.local"),
   // The model name must be a non-empty string, with a sensible default
-  GEMINI_MODEL: z.string().min(1).default("gemini-3.1-flash-lite-preview"),
+  GEMINI_MODEL: z.string().min(1).default("gemini-3.1-flash-lite"),
   // A dev-only switch that fakes bad model replies so we can test the retry and failure paths
   LLM_FAULT_INJECTION: z.enum(["none", "invalid-once", "invalid-always"]).default("none"),
   // A dev-only pause (in milliseconds) inside each node, so runs are slow enough to watch
