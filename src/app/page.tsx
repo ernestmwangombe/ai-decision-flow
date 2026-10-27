@@ -1,5 +1,5 @@
 // Import the editor component we just built
-import { FlowEditor } from "@/components/flow/flow-editor";
+import { FlowEditorClient } from "@/components/flow/flow-editor-client";
 
 // The home page
 export default function Home() {
@@ -19,7 +19,7 @@ export default function Home() {
       {/* The editor fills the remaining height */}
       <div className="flex-1">
         {/* The interactive flow editor */}
-        <FlowEditor />
+        <FlowEditorClient />
       </div>
     </main>
   );

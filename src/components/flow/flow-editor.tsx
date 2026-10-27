@@ -69,12 +69,12 @@ type PendingImport = {
 
 // The editor itself; it must live inside ReactFlowProvider so it can call fitView
 function FlowEditorInner() {
+  // Load the saved graph once, on the first render (this component only ever renders in the browser)
+  const [initialGraph] = useState(() => fromStoredGraph(loadGraph() ?? STARTER_GRAPH));
   // Live nodes plus the handler React Flow calls when nodes move or change
-  const [nodes, setNodes, onNodesChange] = useNodesState<DecisionNodeType>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<DecisionNodeType>(initialGraph.nodes);
   // Live edges plus the handler React Flow calls when edges change
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  // Tracks whether we have finished loading from localStorage
-  const [hydrated, setHydrated] = useState(false);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialGraph.edges);
   // The run currently shown in the panel, used to light up nodes and edges
   const [activeRun, setActiveRun] = useState<RunRecord | null>(null);
   // An imported file waiting for review
@@ -91,25 +91,11 @@ function FlowEditorInner() {
   // The visual state for the run being shown
   const visual = useMemo(() => deriveRunVisualState(graph, activeRun), [graph, activeRun]);
 
-  // On first load in the browser, restore the saved graph or fall back to the starter graph
+  // Save the graph to localStorage every time it changes
   useEffect(() => {
-    // Try the saved graph first; use the starter graph if nothing valid is saved
-    const restored = fromStoredGraph(loadGraph() ?? STARTER_GRAPH);
-    // Put the nodes on the canvas
-    setNodes(restored.nodes);
-    // Put the edges on the canvas
-    setEdges(restored.edges);
-    // Mark loading as finished so saving can begin
-    setHydrated(true);
-  }, [setNodes, setEdges]);
-
-  // Save the graph every time it changes, but only after loading has finished
-  useEffect(() => {
-    // Never save before loading, or we would overwrite real data with an empty graph
-    if (!hydrated) return;
     // Write the current graph to localStorage
     saveGraph(nodes, edges);
-  }, [nodes, edges, hydrated]);
+  }, [nodes, edges]);
 
   // Decide whether a drag between two handles is allowed
   const isValidConnection = useCallback(

@@ -88,16 +88,10 @@ export function RunPanel({ graph, onRunChange }: RunPanelProps) {
   // True while the start request is in flight
   const [submitting, setSubmitting] = useState(false);
   // Finished runs saved in this browser
-  const [history, setHistory] = useState<RunRecord[]>([]);
+  const [history, setHistory] = useState<RunRecord[]>(() => loadHistory());
 
   // The panel is busy while submitting or while a watched run is unfinished
   const busy = submitting || (runId !== null && (run === null || run.status === "queued" || run.status === "running"));
-
-  // Load saved history once, in the browser
-  useEffect(() => {
-    // Read the saved runs
-    setHistory(loadHistory());
-  }, []);
 
   // Tell the canvas which run to draw whenever it changes
   useEffect(() => {
