@@ -242,6 +242,8 @@ Verified locally. The screenshots are single frames taken from short screen reco
 | 9 | Import rejects a file from another app or version | Pass |
 | 10 | Run history survives a dev-server restart | Pass |
 | 11 | The DevTools Issues panel reports no issues | Pass |
+| 12 | The Console and Issues panels are clean with browser extensions disabled | Pass |
+| 12 | The browser console is clean when the app runs without extensions | Pass |
 
 ### 1. Run progress on the canvas
 
@@ -318,3 +320,15 @@ Printing the first lines of the newest exported file in the terminal shows the f
 ![Terminal output showing the first lines of an exported file: app, version, exportedAt and the start of the graph nodes](docs/evidence/44-phase4-export-file-contents.png)
 
 [Recording: export and file contents (45 s)](docs/evidence/video/phase4-export-json.mp4)
+
+### 7. A clean console without extensions
+
+In a normal browser profile, the console and Issues panel also show messages from browser extensions (for example the Grammarly extension logs warnings, and Chrome reports an extension messaging error and a Content Security Policy notice that the app itself never triggers). To rule those out, the app was opened in an Incognito window, where extensions are disabled. After a full workflow run, the console contains only the standard React DevTools hint and the hot-reload connection line, and the DevTools header reads "No issues".
+
+![Incognito window with a completed run, a console showing only two standard development lines, and No issues in the DevTools header](docs/evidence/45-phase4-console-clean-incognito.png)
+
+### 7. A clean console with browser extensions disabled
+
+In a normal browser window the Console shows yellow warnings and a red message that come from the Grammarly browser extension, not from the app. In an Incognito window, where extensions are disabled, the same app shows a clean console after a workflow run: only the React DevTools suggestion and the Fast Refresh connection message appear, and the Issues panel reports no issues. A search of the source for `eval(`, `new Function` and string-based timers also finds nothing.
+
+![Incognito window with a completed run, a console showing only the React DevTools suggestion and the Fast Refresh connection message, and no issues reported](docs/evidence/45-phase4-clean-console-incognito.png)
